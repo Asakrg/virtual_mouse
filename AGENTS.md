@@ -26,6 +26,21 @@ There are no additional modules, tests, or configuration files.
 
 ## Running
 
+### Install dependencies
+
+The notebook imports `cv2`, `mediapipe`, `autopy`, and `numpy` (no `requirements.txt` exists yet). Install them in your environment:
+
+```bash
+pip install opencv-python mediapipe autopy numpy
+```
+
+### Launch
+
+```bash
+jupyter notebook virtual_mouse.ipynb
+# or: jupyter lab virtual_mouse.ipynb
+```
+
 Open `virtual_mouse.ipynb` in Jupyter and run the single code cell. The notebook will:
 
 1. Open the default webcam (`cv2.VideoCapture(0)`).
@@ -44,7 +59,11 @@ A webcam and a graphical display are required; the notebook cannot run headless 
 jupyter nbconvert --to script virtual_mouse.ipynb
 ```
 
-This produces `virtual_mouse.py` that can be run outside Jupyter.
+This produces `virtual_mouse.py` that can be run outside Jupyter:
+
+```bash
+python virtual_mouse.py
+```
 
 ## Gesture Controls
 
@@ -60,6 +79,8 @@ Only the index finger (landmark 8) is used for cursor position. The `fingers()` 
 
 - **`handLandmarks(colorImg)`** — Processes an RGB frame through MediaPipe, draws landmarks, and returns a list of `[index, x, y]` for each of the 21 landmarks.
 - **`fingers(landmarks)`** — Returns a 4-element binary list indicating which fingers (index/middle/ring/pinky) are raised.
+- **`handLandmarks()` uses the global `frame`** — Despite taking `colorImg` as its parameter, the function processes `colorImg` through MediaPipe (`mainHand.process(colorImg)`) but draws onto and reads dimensions from the module-global `frame` variable (`draw.draw_landmarks(frame, ...)` and `h, w, c = frame.shape`). It therefore depends on `frame` being defined in the outer scope.
+- **Redundant landmark drawing** — `draw.draw_landmarks(frame, hand, ...)` is called inside the per-landmark `for` loop in `handLandmarks()` (≈21 times per hand per frame), and the main loop draws landmarks again with `mp_drawing.draw_landmarks(...)`. `draw` and `mp_drawing` are both aliases of `mp.solutions.drawing_utils`, so the same landmarks are drawn repeatedly each frame.
 - **Duplicate MediaPipe initialization** — The code creates two `mp.solutions.hands.Hands()` instances: `mainHand` (used inside `handLandmarks()`) and `hands` (used in the main loop for drawing and cursor mapping). This is redundant; a single instance could serve both purposes.
 - **Dead code: `prev_finger_pos`** — Assigned after each frame but never read. The smoothing logic uses only `curr_finger_pos`.
 - **Smoothing** — Cursor movement is dampened with a rolling average (`curr += (target - curr) / 7`).
@@ -71,6 +92,7 @@ The `.idea/` directory indicates the project was developed in **PyCharm** with:
 - **Python 3.8** SDK
 - **Black** formatter configured
 - **`.venv`** virtual environment (excluded from the project)
+- **Package-requirements inspection** — `.idea/inspectionProfiles/Project_Default.xml` enables `PyPackageRequirementsInspection` with an ignore list of ML/CUDA-related packages (`nvidia-nccl-cu11`, `triton`, `pkgutil-resolve-name`, `backports.zoneinfo`, `typing-extensions`), consistent with a development environment that also had PyTorch/CUDA-related packages installed.
 
 ## TODO
 
@@ -80,3 +102,5 @@ The `.idea/` directory indicates the project was developed in **PyCharm** with:
 - [ ] Consider configurable smoothing factor and webcam device index.
 - [ ] Consolidate duplicate MediaPipe `Hands()` instances into one.
 - [ ] Remove or utilize the unused `prev_finger_pos` variable.
+- [ ] Move `draw.draw_landmarks()` out of the per-landmark loop in `handLandmarks()` and deduplicate with the main-loop drawing call.
+- [ ] Notebook `language_info` metadata lists Python 2.7.6 with the `ipython2` lexer while the kernelspec targets Python 3; metadata appears stale — verify and fix.
