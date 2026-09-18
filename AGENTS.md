@@ -6,6 +6,9 @@ Hand-tracking virtual mouse implemented as a single Jupyter notebook: `virtual_m
 It uses the webcam (`cv2.VideoCapture(0)`) plus MediaPipe Hands to track the index finger,
 maps it to screen coordinates, and moves/clicks the mouse via `autopy`.
 
+- `virtual_mouse.ipynb` — the entire project (one code cell with the full program).
+- `.idea/` — JetBrains IDE config; ignore.
+
 ## Running
 
 The project is a notebook (Python 3 kernel). No packaging, CLI, or scripts exist.
@@ -20,6 +23,10 @@ jupyter notebook virtual_mouse.ipynb
 ## Dependencies
 
 Imported in the notebook: `opencv-python` (cv2), `mediapipe`, `autopy`, `numpy`.
+
+```bash
+pip install opencv-python mediapipe autopy numpy
+```
 
 TODO: no `requirements.txt`/environment file exists yet; versions are unpinned (`autopy` is unmaintained and may need Python <= 3.9).
 
